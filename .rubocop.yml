@@ -1,0 +1,17 @@
+AllCops:
+  Exclude:
+    - 'db/schema.rb'
+    - 'config/**/*'
+Layout/EmptyLinesAroundClassBody:
+  Enabled: False
+Layout/EmptyLineAfterMagicComment:
+  Enabled: False
+Style/EmptyMethod:
+  Enabled: False
+Style/Documentation:
+  Enabled: False
+Style/FrozenStringLiteralComment:
+  Enabled: False
+Style/HashSyntax:
+  Enabled: True
+  EnforcedShorthandSyntax: never

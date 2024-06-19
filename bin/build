@@ -1,0 +1,14 @@
+#!/bin/bash
+
+rm -f zap_message-*.gem
+
+echo "Building ZapMessage..."
+gem build zap_message.gemspec
+
+new_gem_file=$(ls zap_message-*.gem)
+
+echo "Installing $new_gem_file..."
+gem install "./$new_gem_file"
+
+echo "Booting console"
+irb -r zap_message
