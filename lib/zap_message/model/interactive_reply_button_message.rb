@@ -1,19 +1,18 @@
 # frozen_string_literal: true
 require 'zap_message/model/message'
-require 'zap_message/model/interactive_list_message/section'
-require 'zap_message/model/interactive_list_message/section/row'
+require 'zap_message/model/interactive_reply_button_message/button'
 
 module ZapMessage
   module Model
-    class InteractiveListMessage < Message
+    class InteractiveReplyButtonMessage < Message
       EMPTY_ATTRIBUTES = {}.freeze
       # TODO: add constraints
       # button.length <= 20 && required
-      # header.length <= 60
-      # body.length <= 4096 && required
+      # header.text.length <= 60
+      # body.length <= 1024 && required
       # footer.length <= 60
 
-      attr_accessor :button, :sections, :header, :body, :footer
+      attr_accessor :buttons, :header, :body, :footer
 
       def initialize(**attrs)
         super(**attrs)
@@ -25,8 +24,8 @@ module ZapMessage
       def message_type_attributes
         {
           interactive: {
-            type: 'list',
-            action: { button: button, sections: sections_attributes }
+            type: 'button',
+            action: { buttons: buttons_attributes }
           }.merge(header_attributes)
             .merge(body_attributes)
             .merge(footer_attributes)
@@ -34,6 +33,8 @@ module ZapMessage
       end
 
       def header_attributes
+        # TODO: accept media types
+        # header may also be document, image, or video
         return EMPTY_ATTRIBUTES unless header
 
         {
@@ -64,8 +65,8 @@ module ZapMessage
         }
       end
 
-      def sections_attributes
-        sections.map(&:attributes)
+      def buttons_attributes
+        buttons.map(&:attributes)
       end
     end
   end

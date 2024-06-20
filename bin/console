@@ -1,4 +1,4 @@
 #!/bin/bash
 
 echo "Booting console"
-IRBRC=./irbrc.rb irb
+irb -I lib -r zap_message
