@@ -3,6 +3,11 @@
 module ZapMessage
   module Model
     class Message
+      # TODO: add constraints
+      # messaging_product required
+      # recipient_type required
+      # to required
+      # type required
       attr_accessor :messaging_product, :recipient_type, :to, :type, :replied_message_id
 
       def initialize(**attrs)
