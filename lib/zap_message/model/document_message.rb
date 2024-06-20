@@ -3,6 +3,7 @@ require 'zap_message/model/message'
 module ZapMessage
   module Model
     class DocumentMessage < Message
+      EMPTY_ATTRIBUTES = {}.freeze
 
       attr_accessor :id, :link, :caption, :filename
 
