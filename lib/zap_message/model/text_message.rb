@@ -22,7 +22,6 @@ module ZapMessage
           }
         }
       end
-
     end
   end
 end
