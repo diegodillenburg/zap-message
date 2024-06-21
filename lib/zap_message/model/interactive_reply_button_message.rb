@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'zap_message/model/message'
 require 'zap_message/model/interactive_reply_button_message/button'
+require 'zap_message/model/interactive_reply_button_message/media_header'
 
 module ZapMessage
   module Model
@@ -34,15 +35,10 @@ module ZapMessage
 
       def header_attributes
         # TODO: accept media types
-        # header may also be document, image, or video
+        # raise unless header.is_a? MediaHeader obj
         return EMPTY_ATTRIBUTES unless header
 
-        {
-          header: {
-            type: 'text',
-            text: header
-          }
-        }
+        { header: header.attributes }
       end
 
       def body_attributes
