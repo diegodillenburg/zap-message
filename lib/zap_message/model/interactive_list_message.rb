@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 require 'zap_message/model/message'
 require 'zap_message/model/interactive_list_message/section'
-require 'zap_message/model/interactive_list_message/section/row'
 
 module ZapMessage
   module Model

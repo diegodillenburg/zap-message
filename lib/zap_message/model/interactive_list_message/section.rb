@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+require 'zap_message/model/interactive_list_message/section/row'
+
 module ZapMessage
   module Model
     class InteractiveListMessage < Message
