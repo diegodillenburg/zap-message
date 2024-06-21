@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 require 'zap_message/model/message'
-require 'zap_message/model/contacts_message/address'
 require 'zap_message/model/contacts_message/contact'
-require 'zap_message/model/contacts_message/email'
-require 'zap_message/model/contacts_message/name'
-require 'zap_message/model/contacts_message/org'
-require 'zap_message/model/contacts_message/phone'
-require 'zap_message/model/contacts_message/url'
 
 module ZapMessage
   module Model
