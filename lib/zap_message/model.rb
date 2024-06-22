@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'zap_message/model/media'
 require 'zap_message/model/message'
 # TODO: implement
 # require 'zap_message/model/address_message'

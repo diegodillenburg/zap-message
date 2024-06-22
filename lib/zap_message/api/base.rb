@@ -47,6 +47,14 @@ module ZapMessage
         yield status, response
       end
 
+      def delete(path, query_params = {})
+        request = Net::HTTP::Delete.new(build_path(path))
+
+        status, response = process(request)
+
+        yield status, response
+      end
+
       def process(request)
         request['Authorization'] = "Bearer #{access_token}"
         request['Content-Type'] = 'application/json'
