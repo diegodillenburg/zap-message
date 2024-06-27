@@ -22,6 +22,8 @@ module ZapMessage
       def attributes
         validate!
 
+        raise ::ZapMessage::Error::ValidationFailure if error
+
         base_attributes.merge(message_type_attributes)
       end
 
