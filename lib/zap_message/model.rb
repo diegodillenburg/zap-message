@@ -1,4 +1,7 @@
 # frozen_string_literal: true
+require 'zap_message/error'
+require 'zap_message/validator'
+
 require 'zap_message/model/media'
 require 'zap_message/model/message'
 # TODO: implement

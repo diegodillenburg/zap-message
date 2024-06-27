@@ -4,6 +4,7 @@ require 'zap_message/model/message'
 module ZapMessage
   module Model
     class TextMessage < Message
+      ATTRS = (Message::ATTRS + %i[body preview_url]).freeze
 
       attr_accessor :body, :preview_url
 
@@ -22,6 +23,13 @@ module ZapMessage
             preview_url: preview_url
           }
         }
+      end
+
+      def scheme
+        [
+          { name: :body, type: String, validations: [:required, :max_length_4096] },
+          { name: :preview_url, type: String, validations: [:required] },
+        ]
       end
     end
   end
