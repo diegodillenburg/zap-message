@@ -3,7 +3,7 @@
 module ZapMessage
   module Model
     class InteractiveReplyButtonMessage < Message
-      class MediaHeader
+      class MediaHeader < ZapMessage::Model::Base
         include ZapMessage::Validator
 
         ATTRS = %i[id link type caption filename text].freeze
@@ -12,17 +12,8 @@ module ZapMessage
 
         attr_accessor :id, :link, :type, :caption, :filename, :text
 
-        def initialize(**attrs)
-          @id = attrs[:id]
-          @link = attrs[:link]
-          @text = attrs[:text]
-          @type = attrs[:type]
-          @caption = attrs[:caption]
-        end
-
         def attributes
           validate!
-          binding.pry
           raise ::ZapMessage::Error::ValidationFailure if error
 
           {

@@ -46,7 +46,7 @@ module ZapMessage
 
       class TypeDisallowsAttribute < InvalidAttributes
         def build_message(attribute, type)
-          "Attribute #{attribute} disallows #{type}"
+          "Type #{type} disallows attribute #{attribute}"
         end
       end
 

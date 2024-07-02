@@ -26,7 +26,7 @@ module ZapMessage
     #
     #   message.attributes # => { messaging_product: 'whatsapp', recipient_type: 'individual', to: '+1234567890', type: 'text', context: { message_id: 'abcdef123456' } }
     #
-    class Message
+    class Message < ZapMessage::Model::Base
       include ZapMessage::Validator
 
       ATTRS = %i[messaging_product recipient_type to type replied_message_id].freeze
@@ -61,7 +61,7 @@ module ZapMessage
       # @option attrs [String] :type The type of the message
       # @option attrs [String, nil] :replied_message_id The ID of the replied message, if any
       def initialize(**attrs)
-        initialize_attributes(attrs)
+        super(**attrs)
         @messaging_product ||= 'whatsapp'
         @recipient_type ||= 'individual'
       end
@@ -106,23 +106,6 @@ module ZapMessage
         return {} if replied_message_id.nil?
 
         { context: { message_id: replied_message_id } }
-      end
-
-      # Initializes the attributes of the message object.
-      #
-      # @param attributes [Hash] The attributes to initialize the message with
-      def initialize_attributes(attributes)
-        attributes.each do |name, value|
-          public_send("#{name}=", value) if allowed_attribute?(name)
-        end
-      end
-
-      # Checks if the attribute name is allowed to be set.
-      #
-      # @param attribute_name [Symbol, String] The attribute name to check
-      # @return [Boolean] true if the attribute can be set, false otherwise
-      def allowed_attribute?(attribute_name)
-        respond_to?("#{attribute_name}=")
       end
 
       # Defines the schema for the message attributes.
