@@ -4,31 +4,26 @@ module ZapMessage
   module Model
     class ContactsMessage < Message
       class Contact
-        class Name
+        class Name < ZapMessage::Model::Base
+          include ::ZapMessage::Validator
+
           EMPTY_ATTRIBUTES = {}.freeze
+          ATTRS = %i[first_name middle_name last_name suffix prefix formatted_name]
           # TODO: add constraints
           # formatted_name required
           attr_accessor :first_name, :middle_name, :last_name, :suffix, :prefix
-
-          # rubocop:disable Metrics/ParameterLists
-          def initialize(first_name, middle_name, last_name, suffix, prefix, formatted_name = nil)
-            @first_name = first_name
-            @middle_name = middle_name
-            @last_name = last_name
-            @suffix = suffix
-            @prefix = prefix
-            @formatted_name = formatted_name
-          end
-          # rubocop:enable Metrics/ParameterLists
+          attr_writer :formatted_name
 
           def attributes
+            validate!
+
             {
               formatted_name: formatted_name
             }.merge(first_name_attributes)
               .merge(middle_name_attributes)
               .merge(last_name_attributes)
-              .merge(suffix_name_attributes)
-              .merge(prefix_name_attributes)
+              .merge(suffix_attributes)
+              .merge(prefix_attributes)
           end
 
           def first_name_attributes
@@ -69,6 +64,12 @@ module ZapMessage
               last_name,
               suffix
             ].compact.join(' ')
+          end
+
+          def scheme_definition
+            [
+              { name: :formatted_name, type: String, validations: %i[required] }
+            ]
           end
         end
       end

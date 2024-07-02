@@ -72,7 +72,6 @@ module ZapMessage
       # @raise [ZapMessage::Error::ValidationFailure] if validation fails
       def attributes
         validate!
-        raise ::ZapMessage::Error::ValidationFailure if error
 
         base_attributes.merge(message_type_attributes)
       end
@@ -111,13 +110,12 @@ module ZapMessage
       # Defines the schema for the message attributes.
       #
       # @return [Array<Hash>] The schema of the message attributes
-      def scheme
+      def scheme_definition
         [
           { name: :messaging_product, type: String, validations: [:required] },
           { name: :recipient_type, type: String, validations: [:required] },
           { name: :to, type: String, validations: [:required] },
           { name: :type, type: String, validations: [:required] },
-          { name: :replied_message_id, type: String, validations: [:required] }
         ]
       end
     end

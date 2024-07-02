@@ -7,7 +7,25 @@ module ZapMessage
 
     private
 
+    def scheme
+      scheme_definition + scheme_extension
+    end
+
+    def scheme_definition
+      raise NotImplementedError
+    end
+
+    def scheme_extension
+      []
+    end
+
     def validate!
+      run_validation_set
+
+      raise ::ZapMessage::Error::ValidationFailure if error
+    end
+
+    def run_validation_set
       reset_error_message!
       validate_scheme!
       validate_scheme_attributes!
@@ -19,7 +37,6 @@ module ZapMessage
            ZapMessage::Error::InvalidAttributes::MissingRequiredAttribute,
            ZapMessage::Error::InvalidAttributes::TypeDisallowsAttribute,
            ZapMessage::Error::InvalidAttributes::TypeMismatch => e
-
       @error = e.message
     end
 
@@ -80,7 +97,8 @@ module ZapMessage
     end
 
     def required(_, attribute, type)
-      if public_send(attribute).nil?
+      attr = public_send(attribute)
+      if attr.nil? || attr.empty?
         raise ZapMessage::Error::InvalidAttributes::MissingRequiredAttribute.new(nil, attribute: attribute)
       end
 

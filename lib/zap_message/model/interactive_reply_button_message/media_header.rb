@@ -14,7 +14,6 @@ module ZapMessage
 
         def attributes
           validate!
-          raise ::ZapMessage::Error::ValidationFailure if error
 
           {
             type: type
@@ -39,7 +38,7 @@ module ZapMessage
           end
         end
 
-        def scheme
+        def scheme_definition
           [
             { name: :id, type: String, validations: %i[identifier] },
             { name: :link, type: String, validations: %i[identifier] },

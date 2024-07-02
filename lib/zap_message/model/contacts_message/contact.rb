@@ -10,6 +10,8 @@ module ZapMessage
   module Model
     class ContactsMessage < Message
       class Contact
+        include ::ZapMessage::Validator
+
         EMPTY_ATTRIBUTES = {}.freeze
         # TODO: add constraints
         # name required
@@ -29,6 +31,8 @@ module ZapMessage
         # rubocop:enable Metrics/ParameterLists
 
         def attributes
+          validate!
+
           {
             name: name.attributes
           }.merge(addresses_attributes)
@@ -73,6 +77,12 @@ module ZapMessage
           return EMPTY_ATTRIBUTES unless urls.any?
 
           { urls: urls.map(&:attributes) }
+        end
+
+        def scheme_definition
+          [
+            { name: :name, type: Contact::Name, validations: %i[required] }
+          ]
         end
       end
     end

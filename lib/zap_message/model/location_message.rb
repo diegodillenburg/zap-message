@@ -36,7 +36,7 @@ module ZapMessage
         { address: address }
       end
 
-      def scheme
+      def scheme_extension
         [
           { name: :latitude, type: Float, validations: [:required] },
           { name: :longitude, type: Float, validations: [:required] },

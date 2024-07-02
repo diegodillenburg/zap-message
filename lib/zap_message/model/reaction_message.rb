@@ -23,7 +23,7 @@ module ZapMessage
         }
       end
 
-      def scheme
+      def scheme_extension
         [
           { name: :message_id, type: String, validations: [:required] },
           { name: :emoji, type: String, validations: [:required] },
