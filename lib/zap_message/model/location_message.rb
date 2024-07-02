@@ -35,6 +35,15 @@ module ZapMessage
 
         { address: address }
       end
+
+      def scheme
+        [
+          { name: :latitude, type: Float, validations: [:required] },
+          { name: :longitude, type: Float, validations: [:required] },
+          { name: :name, type: String, validations: [:required] },
+          { name: :address, type: String, validations: [:required] }
+        ]
+      end
     end
   end
 end

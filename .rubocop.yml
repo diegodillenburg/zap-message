@@ -15,3 +15,6 @@ Style/FrozenStringLiteralComment:
 Style/HashSyntax:
   Enabled: True
   EnforcedShorthandSyntax: never
+Naming/VariableNumber:
+  Enabled: True
+  EnforcedStyle: snake_case

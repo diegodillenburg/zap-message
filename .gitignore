@@ -1,3 +1,5 @@
 .env
 zap_message-*.gem
 irbrc.rb
+.yardoc/
+doc/
