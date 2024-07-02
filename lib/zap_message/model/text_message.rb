@@ -27,7 +27,7 @@ module ZapMessage
 
       def scheme
         [
-          { name: :body, type: String, validations: %i[required max_length_4096] },
+          { name: :body, type: String, validations: [:required, :max_length_4096] },
           { name: :preview_url, type: String, validations: %i[required] }
         ]
       end

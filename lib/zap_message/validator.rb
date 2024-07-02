@@ -42,7 +42,7 @@ module ZapMessage
     end
 
     def validate(attribute, type, validation)
-      send(validation, attribute, type)
+      send(validation, validation, attribute, type)
     rescue NoMethodError => e
       validation_method_missing(e.name, *e.args)
     end
@@ -53,26 +53,73 @@ module ZapMessage
       raise ZapMessage::Error::InvalidAttributes::TypeMismatch.new(nil, attribute: attribute, type: type)
     end
 
-    def required(attribute, type)
-      raise ZapMessage::Error::InvalidAttributes::MissingRequiredAttribute.new(nil, attribute: attribute) if public_send(attribute).nil?
+    def identifier(_, _, _)
+      validate_identifier_exclusiviness
+      return if !id.nil? || !link.nil?
+
+      raise ZapMessage::Error::InvalidAttributes::IdentifierRequired
+    end
+
+    def validate_identifier_exclusiviness
+      return unless !id.nil? && !link.nil?
+
+      raise ZapMessage::Error::InvalidAttributes::IdentifierExclusive
+    end
+
+    def required(_, attribute, type)
+      if public_send(attribute).nil?
+        raise ZapMessage::Error::InvalidAttributes::MissingRequiredAttribute.new(nil, attribute: attribute)
+      end
 
       type_check(attribute, type)
     end
 
     def validation_method_missing(method, *args, &block)
-      return unless method.to_s.start_with?('max_length')
+      template_method_name = template_name(method)
 
-      self.class.define_method(method, &method(:max_length_template))
+      self.class.define_method(method, &method(template_method_name.to_sym))
       send(method, *args.unshift(method.to_s), &block)
     end
 
-    def max_length_template(name, attribute, _)
-      max_length = name.split('_').last.to_i
+    def max_length_template(validation, attribute, _)
+      max_length = validation.to_s.split('_').last.to_i
       attribute_length = public_send(attribute).to_i
 
       return if attribute_length <= max_length
 
-      raise ZapMessage::Error::InvalidAttributes::MaximumLengthExceeded.new(nil, attribute: attribute, attribute_length: attribute_length, max_length: max_length)
+      raise ZapMessage::Error::InvalidAttributes::MaximumLengthExceeded.new(
+        nil, attribute: attribute, attribute_length: attribute_length, max_length: max_length
+      )
+    end
+
+    def except_template(validation, attribute, _)
+      exists = !public_send(attribute).nil?
+      disallowed_type = validation.to_s.split('_')[-1]
+
+      return unless disallowed_type == type && exists
+
+      raise ZapMessage::Error::InvalidAttributes::TypeDisallowsAttribute.new(nil, attribute: attribute, type: type)
+    end
+
+    def only_template(validation, attribute, _)
+      exists = !public_send(attribute).nil?
+      allowed_type = validation.to_s.split('_')[-1]
+
+      return unless allowed_type != type && exists
+
+      raise ZapMessage::Error::InvalidAttributes::TypeDisallowsAttribute.new(nil, attribute: attribute, type: type)
+    end
+
+    def template_name(method)
+      if method.to_s.start_with?('max_length')
+        :max_length_template
+      elsif method.to_s.start_with?('except')
+        :except_template
+      elsif method.to_s.start_with?('only')
+        :only_template
+      else
+        raise ZapMessage::Error::MethodTemplateMissing.new(nil, method: method)
+      end
     end
   end
 end

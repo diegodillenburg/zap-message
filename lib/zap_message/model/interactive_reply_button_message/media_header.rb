@@ -3,22 +3,30 @@
 module ZapMessage
   module Model
     class InteractiveReplyButtonMessage < Message
-      class Button
+      class MediaHeader
+        include ZapMessage::Validator
+
+        ATTRS = %i[id link type caption filename text].freeze
         # TODO: add constraints
         # validate types
 
-        attr_accessor :id, :link, :text, :_type
+        attr_accessor :id, :link, :type, :caption, :filename, :text
 
         def initialize(**attrs)
           @id = attrs[:id]
           @link = attrs[:link]
           @text = attrs[:text]
-          @_type = attrs[:type]
+          @type = attrs[:type]
+          @caption = attrs[:caption]
         end
 
         def attributes
+          validate!
+          binding.pry
+          raise ::ZapMessage::Error::ValidationFailure if error
+
           {
-            type: _type
+            type: type
           }.merge(media_attributes)
         end
 
@@ -26,18 +34,27 @@ module ZapMessage
 
         def media_attributes
           {
-            _type.to_sym => media
+            type => media
           }
         end
 
         def media
-          return text if _type == 'text'
+          return text if type == 'text'
 
           if id
             { id: id }
           else
             { link: link }
           end
+        end
+
+        def scheme
+          [
+            { name: :id, type: String, validations: %i[identifier] },
+            { name: :link, type: String, validations: %i[identifier] },
+            { name: :caption, type: String, validations: %i[except_audio except_sticker] },
+            { name: :filename, type: String, validations: %i[only_document] }
+          ]
         end
       end
     end
