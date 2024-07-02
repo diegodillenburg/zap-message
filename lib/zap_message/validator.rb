@@ -10,7 +10,13 @@ module ZapMessage
       validate_scheme!
       validate_scheme_attributes!
     rescue ZapMessage::Error::InvalidScheme,
-           ZapMessage::Error::InvalidAttributes => e
+           ZapMessage::Error::InvalidAttributes,
+           ZapMessage::Error::InvalidAttributes::IdentifierRequired,
+           ZapMessage::Error::InvalidAttributes::IdentifierExclusive,
+           ZapMessage::Error::InvalidAttributes::MaximumLengthExceeded,
+           ZapMessage::Error::InvalidAttributes::MissingRequiredAttribute,
+           ZapMessage::Error::InvalidAttributes::TypeDisallowsAttribute,
+           ZapMessage::Error::InvalidAttributes::TypeMismatch => e
 
       @error = e.message
     end
@@ -78,12 +84,12 @@ module ZapMessage
       template_method_name = template_name(method)
 
       self.class.define_method(method, &method(template_method_name.to_sym))
-      send(method, *args.unshift(method.to_s), &block)
+      send(method, *args, &block)
     end
 
     def max_length_template(validation, attribute, _)
       max_length = validation.to_s.split('_').last.to_i
-      attribute_length = public_send(attribute).to_i
+      attribute_length = public_send(attribute).size
 
       return if attribute_length <= max_length
 
