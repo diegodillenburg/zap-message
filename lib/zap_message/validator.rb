@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+class Boolean; end
 
 module ZapMessage
   module Validator
@@ -7,6 +8,7 @@ module ZapMessage
     private
 
     def validate!
+      reset_error_message!
       validate_scheme!
       validate_scheme_attributes!
     rescue ZapMessage::Error::InvalidScheme,
@@ -19,6 +21,10 @@ module ZapMessage
            ZapMessage::Error::InvalidAttributes::TypeMismatch => e
 
       @error = e.message
+    end
+
+    def reset_error_message!
+      @error = nil
     end
 
     def validate_scheme!
@@ -54,6 +60,7 @@ module ZapMessage
     end
 
     def type_check(attribute, type)
+      return if type == Boolean && %w(FalseClass TrueClass).include?(public_send(attribute).class.name)
       return if public_send(attribute).is_a?(type)
 
       raise ZapMessage::Error::InvalidAttributes::TypeMismatch.new(nil, attribute: attribute, type: type)
