@@ -3,7 +3,7 @@
 module ZapMessage
   module Model
     class ContactsMessage < Message
-      class Contact
+      class Contact < ZapMessage::Model::Base
         class Name < ZapMessage::Model::Base
           include ::ZapMessage::Validator
 

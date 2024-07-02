@@ -9,26 +9,23 @@ require 'zap_message/model/contacts_message/contact/url'
 module ZapMessage
   module Model
     class ContactsMessage < Message
-      class Contact
+      class Contact < ZapMessage::Model::Base
         include ::ZapMessage::Validator
 
+        ATTRS = %i[addresses birthday emails name org phones urls]
         EMPTY_ATTRIBUTES = {}.freeze
         # TODO: add constraints
         # name required
         # birthday format YYYY-MM-DD
-        attr_accessor :addresses, :name, :org, :phones, :urls
+        attr_accessor :addresses, :birthday, :emails, :name, :org, :phones, :urls
 
-        # rubocop:disable Metrics/ParameterLists
-        def initialize(name:, addresses: [], birthday: nil, emails: [], org: nil, phones: [], urls: [])
-          @addresses = addresses
-          @birthday = birthday
-          @emails = emails
-          @name = name
-          @org = org
-          @phones = phones
-          @urls = urls
+        def initialize(**attrs)
+          super(**attrs)
+          @addresses ||= []
+          @emails ||= []
+          @phones ||= []
+          @urls ||= []
         end
-        # rubocop:enable Metrics/ParameterLists
 
         def attributes
           validate!
@@ -39,7 +36,7 @@ module ZapMessage
             .merge(birthday_attributes)
             .merge(emails_attributes)
             .merge(org_attributes)
-            .merge(phone_attributes)
+            .merge(phones_attributes)
             .merge(urls_attributes)
         end
 

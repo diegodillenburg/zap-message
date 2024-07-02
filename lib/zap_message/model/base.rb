@@ -8,6 +8,10 @@ module ZapMessage
         initialize_attributes(attrs)
       end
 
+      def empty?
+        false
+      end
+
       private
 
       # Initializes the attributes of the message object.

@@ -3,8 +3,8 @@
 module ZapMessage
   module Model
     class ContactsMessage < Message
-      class Contact
-        class Email
+      class Contact < ZapMessage::Model::Base
+        class Email < ZapMessage::Model::Base
           EMPTY_ATTRIBUTES = {}.freeze
 
           attr_accessor :email, :_type
