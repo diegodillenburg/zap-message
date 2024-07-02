@@ -5,14 +5,10 @@ module ZapMessage
     class ContactsMessage < Message
       class Contact < ZapMessage::Model::Base
         class Email < ZapMessage::Model::Base
+          ATTRS = %i[email type]
           EMPTY_ATTRIBUTES = {}.freeze
 
-          attr_accessor :email, :_type
-
-          def initialize(email: nil, type: nil)
-            @email = email
-            @_type = type
-          end
+          attr_accessor :email, :type
 
           def attributes
             email_attibutes
@@ -26,9 +22,9 @@ module ZapMessage
           end
 
           def type_attributes
-            return EMPTY_ATTRIBUTES unless _type
+            return EMPTY_ATTRIBUTES unless type
 
-            { type: _type }
+            { type: type }
           end
         end
       end

@@ -77,10 +77,11 @@ module ZapMessage
     end
 
     def type_check(attribute, type)
-      return if type == Boolean && %w(FalseClass TrueClass).include?(public_send(attribute).class.name)
-      return if public_send(attribute).is_a?(type)
+      attr = public_send(attribute)
+      return if type == Boolean && %w(FalseClass TrueClass).include?(attr.class.name)
+      return if attr.is_a?(type)
 
-      raise ZapMessage::Error::InvalidAttributes::TypeMismatch.new(nil, attribute: attribute, type: type)
+      raise ZapMessage::Error::InvalidAttributes::TypeMismatch.new(nil, attribute: attribute, type: type, actual_type: attr.class.name)
     end
 
     def identifier(_, _, _)
