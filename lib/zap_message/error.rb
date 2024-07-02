@@ -50,9 +50,14 @@ module ZapMessage
         end
       end
 
-      class TypeMismatch < InvalidAttributes
-        def build_message(attribute, type)
-          "Attribute `#{attribute}` expects `#{type}`, but received `#{attribute.class.name}` instead"
+      class TypeMismatch < Error
+        def initialize(_, attribute:, type:, actual_type:)
+          msg = build_message(attribute, type, actual_type)
+          super(msg)
+        end
+
+        def build_message(attribute, type, actual_type)
+          "Attribute `#{attribute}` expects `#{type}`, but received `#{actual_type}` instead"
         end
       end
 
