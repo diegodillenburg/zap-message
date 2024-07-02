@@ -44,14 +44,15 @@ module ZapMessage
         end
       end
 
-      class TypeDisallowsAttribute < Error
-        def initialize(_, attribute:, type:)
-          msg = build_message(attribute, type)
-          super(msg)
-        end
-
+      class TypeDisallowsAttribute < InvalidAttributes
         def build_message(attribute, type)
           "Attribute #{attribute} disallows #{type}"
+        end
+      end
+
+      class TypeMismatch < InvalidAttributes
+        def build_message(attribute, type)
+          "Attribute `#{attribute}` expects `#{type}`, but received `#{attribute.class.name}` instead"
         end
       end
 
@@ -70,12 +71,6 @@ module ZapMessage
 
         def build_message(attribute, _)
           "Missing required attribute: `#{attribute}`"
-        end
-      end
-
-      class TypeMismatch < InvalidAttributes
-        def build_message(attribute, type)
-          "Attribute `#{attribute}` expects `#{type}`, but received `#{attribute.class.name}` instead"
         end
       end
     end
