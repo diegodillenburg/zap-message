@@ -14,9 +14,7 @@ module ZapMessage
 
         ATTRS = %i[addresses birthday emails name org phones urls]
         EMPTY_ATTRIBUTES = {}.freeze
-        # TODO: add constraints
-        # name required
-        # birthday format YYYY-MM-DD
+
         attr_accessor :addresses, :birthday, :emails, :name, :org, :phones, :urls
 
         def initialize(**attrs)
@@ -78,7 +76,9 @@ module ZapMessage
 
         def scheme_definition
           [
-            { name: :name, type: Contact::Name, validations: %i[required] }
+            { name: :name, type: Contact::Name, validations: %i[required] },
+            # TODO: implement date_format
+            { name: :birthday, type: Date, validations: %i[date_format] }
           ]
         end
       end

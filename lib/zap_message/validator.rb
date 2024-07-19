@@ -106,6 +106,19 @@ module ZapMessage
       type_check(attribute, type)
     end
 
+    # TODO: check date helpers availability
+    def date_format(_, attribute)
+      attr = public_send(attribute)
+
+      if attr.is_a?(Date)
+        attr.strftime('%Y-%m-%d') == attr
+      elsif attr.is_a?(String)
+        Date.parse(attr).strftime('%Y-%m-%d') == attr
+      else
+        raise 'Unsupported date type'
+      end
+    end
+
     def validation_method_missing(method, *args, &block)
       template_method_name = template_name(method)
 
