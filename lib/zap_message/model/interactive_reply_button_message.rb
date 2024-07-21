@@ -12,6 +12,7 @@ module ZapMessage
       # header.text.length <= 60
       # body.length <= 1024 && required
       # footer.length <= 60
+      # button type
 
       attr_accessor :buttons, :header, :body, :footer
 
