@@ -21,7 +21,6 @@ require 'zap_message/model/location_request_message'
 require 'zap_message/model/reaction_message'
 require 'zap_message/model/read_receipt_message'
 require 'zap_message/model/sticker_message'
-# TODO: implement
-# require 'zap_message/model/template_message'
+require 'zap_message/model/template_message'
 require 'zap_message/model/text_message'
 require 'zap_message/model/video_message'
