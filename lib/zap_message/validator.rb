@@ -99,7 +99,10 @@ module ZapMessage
 
     def required(_, attribute, type)
       attr = public_send(attribute)
-      if attr.nil? || attr.empty?
+      # hack against preview URL
+      if attr.is_a?(FalseClass) || attr.is_a?(TrueClass)
+        1
+      elsif attr.nil? || (attr.respond_to?(:empty) && attr.empty?)
         raise ZapMessage::Error::InvalidAttributes::MissingRequiredAttribute.new(nil, attribute: attribute)
       end
 
