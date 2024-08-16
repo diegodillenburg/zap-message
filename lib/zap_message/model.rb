@@ -11,7 +11,7 @@ require 'zap_message/model/audio_message'
 require 'zap_message/model/contacts_message'
 require 'zap_message/model/document_message'
 # TODO: implement
-# require 'zap_message/model/flow_message'
+require 'zap_message/model/flow_message'
 require 'zap_message/model/image_message'
 require 'zap_message/model/interactive_cta_message'
 require 'zap_message/model/interactive_list_message'
