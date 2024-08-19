@@ -2,7 +2,7 @@
 
 module ZapMessage
   module Model
-    class Media
+    class Media < Base
       # TODO: add constraints
       # validate types and max sizes
       attr_accessor :messaging_product, :file, :_type
