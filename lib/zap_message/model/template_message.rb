@@ -7,7 +7,7 @@ module ZapMessage
       EMPTY_ATTRIBUTES = {}.freeze
       ATTRS = (Message::ATTRS + %i[body preview_url]).freeze
 
-      attr_accessor :namespace, :name, :language_code, :flow_cta
+      attr_accessor :namespace, :name, :language_code, :flow_cta, :components
 
       def initialize(**attrs)
         super(**attrs)
@@ -26,7 +26,14 @@ module ZapMessage
               code: language_code
             }
           }.merge(flow_cta_attributes)
+            .merge(components_attributes)
         }
+      end
+
+      def components_attributes
+        return EMPTY_ATTRIBUTES unless components
+
+        { components: components }
       end
 
       # rubocop:disable Metrics/MethodLength
