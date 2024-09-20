@@ -11,7 +11,7 @@ module ZapMessage
 
       def send_message(message)
         post(path, message.attributes) do |type, response|
-          puts parse(type, response)
+          parse(type, response)
         end
       end
 
