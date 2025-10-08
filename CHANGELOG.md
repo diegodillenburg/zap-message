@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-10-08
+
+### Enhanced
+
+#### API-Driven Rate Limiting
+- **RateLimiter** now respects Meta's API response headers
+- Parses `X-App-Usage` header containing:
+  - `call_count` - Percentage of API calls used
+  - `total_time` - Percentage of processing time used
+  - `total_cputime` - Percentage of CPU time used
+- Parses `X-Business-Use-Case-Usage` header for business-specific limits
+- Prevents sending when any metric exceeds 100%
+- Maintains backward compatibility with local message counting
+- Automatic header extraction and parsing from all API responses
+- New methods:
+  - `.update_from_headers(headers)` - Update from response headers
+  - `.app_usage` - Get current API usage metrics
+  - `.business_usage` - Get current business usage metrics
+  - `.api_rate_limited?` - Check if API indicates rate limiting
+
+### Technical Details
+
+- **Modified Files:**
+  - `lib/zap_message/rate_limiter.rb` - Added header parsing and API usage tracking
+  - `lib/zap_message/api/base.rb` - Added header extraction and RateLimiter updates
+
+- **New Files:**
+  - `spec/rate_limiter_spec.rb` - Comprehensive specs (16 examples)
+
+- **Test Coverage:**
+  - 56 examples, 0 failures
+
 ## [0.1.0] - 2025-10-08
 
 ### Added

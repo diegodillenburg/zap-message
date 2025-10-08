@@ -76,6 +76,7 @@ module ZapMessage
 
             if response.is_a?(Net::HTTPSuccess)
               log_response(response, duration) if configuration.log_responses
+              update_rate_limiter_from_headers(response)
               return [:success, response]
             elsif should_retry?(response, attempt, max_attempts)
               log_retry(attempt, response.code)
@@ -84,6 +85,7 @@ module ZapMessage
               raise RetryableError
             else
               log_response(response, duration) if configuration.log_responses
+              update_rate_limiter_from_headers(response)
               return [:failure, response]
             end
           rescue RetryableError
@@ -192,6 +194,18 @@ module ZapMessage
         return unless logger
 
         logger.error("[ZapMessage] Exception: #{exception.class.name} - #{exception.message}")
+      end
+
+      def update_rate_limiter_from_headers(response)
+        headers = extract_headers(response)
+        ZapMessage::RateLimiter.update_from_headers(headers)
+      end
+
+      def extract_headers(response)
+        {
+          'x-app-usage' => response['x-app-usage'],
+          'x-business-use-case-usage' => response['x-business-use-case-usage']
+        }
       end
 
       def access_token
