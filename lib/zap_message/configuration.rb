@@ -14,7 +14,8 @@ module ZapMessage
                   :logger,
                   :log_level,
                   :log_requests,
-                  :log_responses
+                  :log_responses,
+                  :webhook_verify_token
 
     def initialize
       @access_token = ENV['WA_BUSINESS_ACCESS_TOKEN']
@@ -30,6 +31,7 @@ module ZapMessage
       @log_level = :info
       @log_requests = false
       @log_responses = false
+      @webhook_verify_token = ENV['WHATSAPP_WEBHOOK_VERIFY_TOKEN']
 
       warn_deprecated_env_usage
     end

@@ -4,9 +4,12 @@ require 'pry'
 require 'pry-byebug'
 require 'logger'
 
+require 'zap_message/version'
 require 'zap_message/configuration'
 require 'zap_message/phone_formatter'
 require 'zap_message/rate_limiter'
+require 'zap_message/webhook_handler'
+require 'zap_message/webhook'
 require 'zap_message/api'
 require 'zap_message/model'
 

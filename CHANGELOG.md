@@ -5,6 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2025-10-08
+
+### Added
+
+#### Webhook Support
+- **WebhookHandler** class for processing WhatsApp webhook events
+- Webhook verification support for Meta's GET request challenge
+  - `.verify(params, verify_token:)` - Verify webhook endpoint
+  - Returns `hub.challenge` for valid verification requests
+  - Raises `VerificationError` for invalid tokens or modes
+- Webhook event parsing from POST request payloads
+  - `.process(payload)` - Parse webhook payload into event objects
+  - Automatic extraction of messages and status updates
+- **Webhook event classes:**
+  - `Webhook::MessageReceived` - Incoming messages from customers
+    - Access to message content (text, image, video, audio, document, location, contacts)
+    - Sender information (name, WhatsApp ID)
+    - Message metadata
+  - `Webhook::MessageStatus` - Message delivery status updates
+    - Status types: sent, delivered, read, failed
+    - Helper methods: `.sent?`, `.delivered?`, `.read?`, `.failed?`
+    - Error information for failed messages
+    - Pricing information
+  - `Webhook::BaseEvent` - Base class for all webhook events
+- Configuration option:
+  - `webhook_verify_token` - Token for webhook verification (ENV: WHATSAPP_WEBHOOK_VERIFY_TOKEN)
+
+#### Usage Example
+
+```ruby
+# In your Rails controller
+class WhatsappWebhooksController < ApplicationController
+  skip_before_action :verify_authenticity_token
+
+  # GET request for webhook verification
+  def verify
+    challenge = ZapMessage::WebhookHandler.verify(params)
+    render plain: challenge
+  rescue ZapMessage::WebhookHandler::VerificationError => e
+    render plain: 'Forbidden', status: 403
+  end
+
+  # POST request for webhook events
+  def create
+    events = ZapMessage::WebhookHandler.process(params.to_unsafe_h)
+
+    events.each do |event|
+      case event
+      when ZapMessage::Webhook::MessageReceived
+        # Handle incoming message
+        Rails.logger.info "Received message from #{event.from}: #{event.text_body}"
+      when ZapMessage::Webhook::MessageStatus
+        # Handle status update
+        Rails.logger.info "Message #{event.message_id} status: #{event.status_value}"
+      end
+    end
+
+    head :ok
+  end
+end
+```
+
+### Technical Details
+
+- **New Files:**
+  - `lib/zap_message/webhook_handler.rb` - Main webhook processing logic
+  - `lib/zap_message/webhook.rb` - Webhook module loader
+  - `lib/zap_message/webhook/base_event.rb` - Base event class
+  - `lib/zap_message/webhook/message_received.rb` - Incoming message events
+  - `lib/zap_message/webhook/message_status.rb` - Status update events
+  - `spec/webhook_handler_spec.rb` - Comprehensive webhook specs (13 examples)
+
+- **Modified Files:**
+  - `lib/zap_message/configuration.rb` - Added `webhook_verify_token` config
+  - `lib/zap_message.rb` - Added webhook requires
+
+- **Test Coverage:**
+  - 69 examples, 0 failures
+
 ## [0.1.1] - 2025-10-08
 
 ### Enhanced
