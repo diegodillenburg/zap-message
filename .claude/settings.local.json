@@ -4,7 +4,8 @@
       "Bash(bundle exec rspec:*)",
       "Bash(bundle install:*)",
       "WebSearch",
-      "WebFetch(domain:developers.facebook.com)"
+      "WebFetch(domain:developers.facebook.com)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
