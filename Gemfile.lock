@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    zap_message (0.0.1)
+    zap_message (0.1.0)
       dotenv (~> 3.1.2)
       pry (~> 0.14)
       pry-byebug (~> 3.10)
@@ -37,6 +37,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-21
+  arm64-darwin-24
 
 DEPENDENCIES
   zap_message!

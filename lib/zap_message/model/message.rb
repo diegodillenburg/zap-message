@@ -64,6 +64,7 @@ module ZapMessage
         super(**attrs)
         @messaging_product ||= 'whatsapp'
         @recipient_type ||= 'individual'
+        @to = ZapMessage::PhoneFormatter.format(@to) if @to
       end
 
       # Returns the attributes of the message after validation and merging with base attributes.

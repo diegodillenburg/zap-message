@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bundle exec rspec:*)",
+      "Bash(bundle install:*)",
+      "WebSearch",
+      "WebFetch(domain:developers.facebook.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

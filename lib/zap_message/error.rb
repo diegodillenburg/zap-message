@@ -2,6 +2,74 @@
 
 module ZapMessage
   class Error < StandardError
+    class InvalidPhoneNumber < Error
+      attr_reader :phone_number
+
+      def initialize(phone_number)
+        @phone_number = phone_number
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "Phone number '#{phone_number}' is invalid. Must be in E.164 format (e.g., 5511999999999)"
+      end
+    end
+
+    class RateLimitExceeded < Error
+      attr_reader :reset_at, :messages_sent
+
+      def initialize(reset_at:, messages_sent:)
+        @reset_at = reset_at
+        @messages_sent = messages_sent
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "Rate limit exceeded. #{messages_sent} messages sent. Resets at #{reset_at}"
+      end
+    end
+
+    class TemplateNotApproved < Error
+      attr_reader :template_name, :status
+
+      def initialize(template_name:, status:)
+        @template_name = template_name
+        @status = status
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "Template '#{template_name}' is not approved. Current status: #{status}"
+      end
+    end
+
+    class MessageTooLong < Error
+      attr_reader :current_length, :max_length
+
+      def initialize(current_length:, max_length:)
+        @current_length = current_length
+        @max_length = max_length
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "Message is too long. Current: #{current_length} characters, Maximum: #{max_length} characters"
+      end
+    end
+
+    class AuthenticationFailed < Error
+      def initialize(message = 'Authentication failed. Check your access token and credentials')
+        super(message)
+      end
+    end
     class MethodTemplateMissing < Error
       def initialize(_, method: nil)
         msg = build_message(method)

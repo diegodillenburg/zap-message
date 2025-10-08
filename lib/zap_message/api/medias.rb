@@ -5,8 +5,6 @@ module ZapMessage
   module Api
     class Medias < Base
       BASE_URL = 'https://graph.facebook.com'
-      VERSION = 'v20.0'
-      WA_BUSINESS_PHONE_NUMBER = ENV['WA_BUSINESS_PHONE_NUMBER']
 
       def retrieve_media(media_identifier)
         path = ['media', media_identifier].join('/')
@@ -35,7 +33,7 @@ module ZapMessage
       private
 
       def base_url
-        URI.parse([BASE_URL, VERSION, WA_BUSINESS_PHONE_NUMBER].join('/'))
+        URI.parse([BASE_URL, configuration.api_version, configuration.phone_number_id].join('/'))
       end
     end
   end
