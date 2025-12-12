@@ -10,7 +10,11 @@ module ZapMessage
 
       def initialize
         @http = Net::HTTP.new(uri.host, uri.port)
-        @http.use_ssl = true if uri.scheme == 'https'
+        if uri.scheme == 'https'
+          @http.use_ssl = true
+          @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+          @http.ca_file = ca_file_path
+        end
         @http.open_timeout = configuration.timeout
         @http.read_timeout = configuration.timeout
       end
@@ -77,7 +81,7 @@ module ZapMessage
             if response.is_a?(Net::HTTPSuccess)
               log_response(response, duration) if configuration.log_responses
               update_rate_limiter_from_headers(response)
-              return [:success, response]
+              [:success, response]
             elsif should_retry?(response, attempt, max_attempts)
               log_retry(attempt, response.code)
               delay = calculate_retry_delay(attempt)
@@ -86,7 +90,7 @@ module ZapMessage
             else
               log_response(response, duration) if configuration.log_responses
               update_rate_limiter_from_headers(response)
-              return [:failure, response]
+              [:failure, response]
             end
           rescue RetryableError
             retry if attempt < max_attempts
@@ -214,6 +218,14 @@ module ZapMessage
 
       def configuration
         ZapMessage.configuration
+      end
+
+      def ca_file_path
+        return '/etc/ssl/cert.pem' if File.exist?('/etc/ssl/cert.pem')
+        return '/etc/ssl/certs/ca-certificates.crt' if File.exist?('/etc/ssl/certs/ca-certificates.crt')
+        return '/etc/pki/tls/certs/ca-bundle.crt' if File.exist?('/etc/pki/tls/certs/ca-bundle.crt')
+
+        nil
       end
     end
   end
