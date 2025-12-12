@@ -53,8 +53,8 @@ module ZapMessage
         yield status, response
       end
 
-      def delete(path)
-        request = Net::HTTP::Delete.new(build_path(path))
+      def delete(path, query_params = {})
+        request = Net::HTTP::Delete.new(build_path(path, query_params))
 
         status, response = process(request)
 
