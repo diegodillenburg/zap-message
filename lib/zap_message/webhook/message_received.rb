@@ -62,6 +62,54 @@ module ZapMessage
       def sender_wa_id
         @contacts&.first&.dig('wa_id')
       end
+
+      def interactive
+        @message['interactive']
+      end
+
+      def interactive_type
+        interactive&.dig('type')
+      end
+
+      def interactive_reply?
+        message_type == 'interactive'
+      end
+
+      def button_reply
+        interactive&.dig('button_reply')
+      end
+
+      def button_reply_id
+        button_reply&.dig('id')
+      end
+
+      def button_reply_title
+        button_reply&.dig('title')
+      end
+
+      def list_reply
+        interactive&.dig('list_reply')
+      end
+
+      def list_reply_id
+        list_reply&.dig('id')
+      end
+
+      def list_reply_title
+        list_reply&.dig('title')
+      end
+
+      def list_reply_description
+        list_reply&.dig('description')
+      end
+
+      def interactive_reply_id
+        button_reply_id || list_reply_id
+      end
+
+      def interactive_reply_title
+        button_reply_title || list_reply_title
+      end
     end
   end
 end
