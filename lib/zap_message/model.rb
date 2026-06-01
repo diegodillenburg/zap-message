@@ -8,6 +8,7 @@ require 'zap_message/model/message'
 # TODO: implement
 # require 'zap_message/model/address_message'
 require 'zap_message/model/audio_message'
+require 'zap_message/model/contact_request_message'
 require 'zap_message/model/contacts_message'
 require 'zap_message/model/document_message'
 # TODO: implement

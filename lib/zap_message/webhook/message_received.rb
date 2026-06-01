@@ -19,8 +19,31 @@ module ZapMessage
         @message['id']
       end
 
+      # The sender's phone number, when available. As of the 2026 usernames
+      # rollout this may be absent (the user adopted a username and is outside
+      # the 30-day window / not in your contact book). Treat it as opaque and
+      # prefer #sender_identifier when you just need a stable key.
       def from
         @message['from']
+      end
+
+      # The sender's Business-Scoped User ID (BSUID), present on all message
+      # webhooks regardless of whether the user adopted a username.
+      def from_user_id
+        @message['from_user_id']
+      end
+      alias sender_bsuid from_user_id
+
+      # The parent BSUID (managed/multi-portfolio businesses enrolled in a
+      # parent BSUID account). Nil otherwise.
+      def parent_user_id
+        @message['parent_user_id']
+      end
+
+      # Best available stable identifier for the sender: BSUID if present,
+      # otherwise the phone number.
+      def sender_identifier
+        from_user_id || from
       end
 
       def message_type
@@ -59,8 +82,19 @@ module ZapMessage
         @contacts&.first&.dig('profile', 'name')
       end
 
+      # The sender's WhatsApp username (profile.username), present once the user
+      # adopts the usernames feature. Nil otherwise.
+      def sender_username
+        @contacts&.first&.dig('profile', 'username')
+      end
+
       def sender_wa_id
         @contacts&.first&.dig('wa_id')
+      end
+
+      # The sender's BSUID as carried in the contacts block (user_id).
+      def sender_user_id
+        @contacts&.first&.dig('user_id')
       end
 
       def interactive

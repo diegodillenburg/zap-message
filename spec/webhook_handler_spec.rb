@@ -205,6 +205,75 @@ RSpec.describe ZapMessage::WebhookHandler do
       end
     end
 
+    context 'with a system message payload (BSUID regeneration)' do
+      let(:payload) do
+        {
+          'object' => 'whatsapp_business_account',
+          'entry' => [{
+            'id' => 'business_account_id',
+            'changes' => [{
+              'field' => 'messages',
+              'value' => {
+                'messaging_product' => 'whatsapp',
+                'metadata' => { 'phone_number_id' => 'phone_id_123' },
+                'messages' => [{
+                  'id' => 'wamid.sys1',
+                  'type' => 'system',
+                  'from' => '5511999999999',
+                  'system' => {
+                    'type' => 'user_changed_number',
+                    'body' => 'User changed number',
+                    'wa_id' => '5511888888888'
+                  }
+                }]
+              }
+            }]
+          }]
+        }
+      end
+
+      it 'routes system messages to SystemEvent' do
+        events = described_class.process(payload)
+
+        expect(events.size).to eq(1)
+        expect(events.first).to be_a(ZapMessage::Webhook::SystemEvent)
+        expect(events.first.number_changed?).to be true
+        expect(events.first.new_wa_id).to eq('5511888888888')
+      end
+    end
+
+    context 'with a status payload that includes a BSUID' do
+      let(:payload) do
+        {
+          'object' => 'whatsapp_business_account',
+          'entry' => [{
+            'id' => 'business_account_id',
+            'changes' => [{
+              'field' => 'messages',
+              'value' => {
+                'messaging_product' => 'whatsapp',
+                'metadata' => { 'phone_number_id' => 'phone_id_123' },
+                'contacts' => [{ 'user_id' => 'US.13491208655302741918' }],
+                'statuses' => [{
+                  'id' => 'wamid.s1',
+                  'status' => 'delivered',
+                  'recipient_user_id' => 'US.13491208655302741918'
+                }]
+              }
+            }]
+          }]
+        }
+      end
+
+      it 'passes the contacts block through to the status event' do
+        event = described_class.process(payload).first
+
+        expect(event.recipient_user_id).to eq('US.13491208655302741918')
+        expect(event.contact_user_id).to eq('US.13491208655302741918')
+        expect(event.recipient_identifier).to eq('US.13491208655302741918')
+      end
+    end
+
     context 'with invalid payloads' do
       it 'returns empty array for non-hash' do
         expect(described_class.process('invalid')).to eq([])

@@ -5,16 +5,32 @@ module ZapMessage
   module Model
     class TemplateMessage < Message
       EMPTY_ATTRIBUTES = {}.freeze
-      ATTRS = (Message::ATTRS + %i[body preview_url]).freeze
+      ATTRS = (Message::ATTRS + %i[body preview_url authentication]).freeze
 
       attr_accessor :namespace, :name, :language_code, :flow_cta, :components
+
+      # Set truthy for one-tap, zero-tap, or copy-code authentication templates.
+      # These require a phone number recipient and cannot be sent to a BSUID.
+      attr_accessor :authentication
 
       def initialize(**attrs)
         super(**attrs)
         @type ||= 'template'
       end
 
+      def attributes
+        guard_authentication_recipient!
+        super
+      end
+
       private
+
+      def guard_authentication_recipient!
+        return unless authentication
+        return unless ZapMessage::Identifier.bsuid?(to)
+
+        raise ZapMessage::Error::AuthenticationTemplateRequiresPhone, to
+      end
 
       def message_type_attributes
         {

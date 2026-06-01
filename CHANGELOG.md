@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-01
+
+### Added — Business-Scoped User ID (BSUID) support
+
+Adapts the gem to Meta's 2026 WhatsApp usernames rollout, where a user's phone
+number may be replaced by a Business-Scoped User ID (BSUID, e.g.
+`US.13491208655302741918`) in webhooks, and may be used as a send target.
+See https://developers.facebook.com/documentation/business-messaging/whatsapp/business-scoped-user-ids/
+
+- **`ZapMessage::Identifier`** — recognizes/normalizes phone numbers vs. BSUIDs
+  (including parent BSUIDs, `US.ENT.…`). `Identifier.normalize` passes BSUIDs
+  through verbatim and only E.164-formats phone numbers.
+- **Send path now accepts a BSUID as `to`.** `Model::Message` routes the
+  recipient through `Identifier.normalize` instead of `PhoneFormatter.format`,
+  so BSUID recipients are no longer corrupted/rejected. Phone numbers are still
+  formatted as before.
+- **`Webhook::MessageReceived`** — new accessors: `from_user_id` (alias
+  `sender_bsuid`), `parent_user_id`, `sender_user_id`, `sender_username`, and
+  `sender_identifier` (BSUID with phone-number fallback).
+- **`Webhook::MessageStatus`** — new accessors: `recipient_user_id`,
+  `contact_user_id`, and `recipient_identifier`; now also receives the
+  `contacts` block.
+- **`Webhook::SystemEvent`** — new event for `system` messages (e.g. a user
+  changing their phone number, which regenerates their BSUID). The
+  `WebhookHandler` routes `type: 'system'` messages to it.
+- **`Model::ContactRequestMessage`** — interactive `contact_request` message to
+  request a user's phone number.
+- **`Api::Templates.request_contact_info_button`** — helper for the
+  `REQUEST_CONTACT_INFO` template button.
+- **`Error::AuthenticationTemplateRequiresPhone`** — raised when a
+  `TemplateMessage` with `authentication: true` (one-tap/zero-tap/copy-code) is
+  sent to a BSUID, which Meta does not allow.
+
+### Notes
+
+- Backward compatible: phone-number sends and existing webhook accessors
+  (`from`, `sender_wa_id`, `recipient_id`) are unchanged.
+- Test coverage: 131 examples, 0 failures.
+
 ## [0.2.0] - 2025-10-08
 
 ### Added

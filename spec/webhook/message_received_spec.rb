@@ -159,4 +159,64 @@ RSpec.describe ZapMessage::Webhook::MessageReceived do
       expect(event.interactive_reply_title).to be_nil
     end
   end
+
+  describe 'BSUID and username accessors' do
+    let(:message) do
+      {
+        'from' => '5511999999999',
+        'from_user_id' => 'BR.99887766554433221100',
+        'parent_user_id' => 'BR.ENT.11223344556677889900',
+        'id' => 'wamid.bsuid1',
+        'timestamp' => '1609459200',
+        'type' => 'text',
+        'text' => { 'body' => 'Hello' }
+      }
+    end
+    let(:contacts) do
+      [{
+        'profile' => { 'name' => 'John Doe', 'username' => 'johnd' },
+        'wa_id' => '5511999999999',
+        'user_id' => 'BR.99887766554433221100'
+      }]
+    end
+    let(:event) { described_class.new(message: message, contacts: contacts, metadata: metadata) }
+
+    it 'exposes the message-level BSUID' do
+      expect(event.from_user_id).to eq('BR.99887766554433221100')
+      expect(event.sender_bsuid).to eq('BR.99887766554433221100')
+    end
+
+    it 'exposes the parent BSUID' do
+      expect(event.parent_user_id).to eq('BR.ENT.11223344556677889900')
+    end
+
+    it 'exposes the contacts-block BSUID and username' do
+      expect(event.sender_user_id).to eq('BR.99887766554433221100')
+      expect(event.sender_username).to eq('johnd')
+    end
+
+    it 'prefers the BSUID for sender_identifier' do
+      expect(event.sender_identifier).to eq('BR.99887766554433221100')
+    end
+
+    context 'when the user has adopted a username (no phone number)' do
+      let(:message) do
+        {
+          'from_user_id' => 'BR.99887766554433221100',
+          'id' => 'wamid.bsuid2',
+          'type' => 'text',
+          'text' => { 'body' => 'Hi' }
+        }
+      end
+      let(:contacts) do
+        [{ 'profile' => { 'name' => 'Jane', 'username' => 'janed' }, 'user_id' => 'BR.99887766554433221100' }]
+      end
+
+      it 'falls back to the BSUID for sender_identifier when phone is absent' do
+        expect(event.from).to be_nil
+        expect(event.sender_wa_id).to be_nil
+        expect(event.sender_identifier).to eq('BR.99887766554433221100')
+      end
+    end
+  end
 end

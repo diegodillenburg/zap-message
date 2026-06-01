@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'zap_message/identifier'
+
 module ZapMessage
   module Model
     # Represents a message model in the ZapMessage system which includes validation and various attributes.
@@ -64,7 +66,9 @@ module ZapMessage
         super(**attrs)
         @messaging_product ||= 'whatsapp'
         @recipient_type ||= 'individual'
-        @to = ZapMessage::PhoneFormatter.format(@to) if @to
+        # `to` may be a phone number or a Business-Scoped User ID (BSUID).
+        # BSUIDs must be sent verbatim; only phone numbers get E.164 formatting.
+        @to = ZapMessage::Identifier.normalize(@to) if @to
       end
 
       # Returns the attributes of the message after validation and merging with base attributes.

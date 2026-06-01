@@ -17,6 +17,25 @@ module ZapMessage
       end
     end
 
+    # Raised when an authentication template that requires a phone number
+    # (one-tap, zero-tap, or copy-code) is sent to a BSUID recipient. Meta
+    # rejects these combinations, so we fail fast before the request.
+    class AuthenticationTemplateRequiresPhone < Error
+      attr_reader :recipient
+
+      def initialize(recipient)
+        @recipient = recipient
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "Authentication templates (one-tap, zero-tap, copy-code) require a phone " \
+          "number recipient. BSUID '#{recipient}' is not supported for these templates."
+      end
+    end
+
     class RateLimitExceeded < Error
       attr_reader :reset_at, :messages_sent
 

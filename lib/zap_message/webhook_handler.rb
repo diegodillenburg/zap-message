@@ -55,7 +55,8 @@ module ZapMessage
         return [] unless value['messages']
 
         value['messages'].map do |message|
-          Webhook::MessageReceived.new(
+          event_class = message['type'] == 'system' ? Webhook::SystemEvent : Webhook::MessageReceived
+          event_class.new(
             message: message,
             contacts: value['contacts'],
             metadata: value['metadata']
@@ -69,6 +70,7 @@ module ZapMessage
         value['statuses'].map do |status|
           Webhook::MessageStatus.new(
             status: status,
+            contacts: value['contacts'],
             metadata: value['metadata']
           )
         end
