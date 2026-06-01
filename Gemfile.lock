@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    zap_message (0.3.0)
+    zap_message (0.4.0)
       dotenv (~> 3.1.2)
       pry (~> 0.14)
       pry-byebug (~> 3.10)

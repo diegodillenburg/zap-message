@@ -19,10 +19,12 @@ See https://developers.facebook.com/documentation/business-messaging/whatsapp/bu
 - **`ZapMessage::Identifier`** — recognizes/normalizes phone numbers vs. BSUIDs
   (including parent BSUIDs, `US.ENT.…`). `Identifier.normalize` passes BSUIDs
   through verbatim and only E.164-formats phone numbers.
-- **Send path now accepts a BSUID as `to`.** `Model::Message` routes the
-  recipient through `Identifier.normalize` instead of `PhoneFormatter.format`,
-  so BSUID recipients are no longer corrupted/rejected. Phone numbers are still
-  formatted as before.
+- **Send path now accepts a BSUID recipient.** `Model::Message` detects the
+  identifier kind and routes it to the field the Messages API expects: a BSUID
+  goes in the dedicated `recipient` field (verbatim, with `to` omitted), while a
+  phone number goes in `to` (E.164-formatted, with `recipient` omitted). The
+  identifier may be supplied via either the `to:` or `recipient:` keyword.
+  Requires Graph API `v22.0+` (the default `api_version` is now `v22.0`).
 - **`Webhook::MessageReceived`** — new accessors: `from_user_id` (alias
   `sender_bsuid`), `parent_user_id`, `sender_user_id`, `sender_username`, and
   `sender_identifier` (BSUID with phone-number fallback).
@@ -44,7 +46,7 @@ See https://developers.facebook.com/documentation/business-messaging/whatsapp/bu
 
 - Backward compatible: phone-number sends and existing webhook accessors
   (`from`, `sender_wa_id`, `recipient_id`) are unchanged.
-- Test coverage: 131 examples, 0 failures.
+- Test coverage: 133 examples, 0 failures.
 
 ## [0.2.0] - 2025-10-08
 

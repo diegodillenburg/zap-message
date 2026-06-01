@@ -21,7 +21,8 @@ module ZapMessage
       @access_token = ENV['WA_BUSINESS_ACCESS_TOKEN']
       @phone_number_id = ENV['WA_BUSINESS_PHONE_NUMBER']
       @business_account_id = ENV['WHATSAPP_BUSINESS_ACCOUNT_ID']
-      @api_version = 'v20.0'
+      # v22.0+ is required for BSUID (`recipient`) send targets.
+      @api_version = 'v22.0'
       @timeout = 30
       @retry_attempts = 3
       @retry_delay = 1

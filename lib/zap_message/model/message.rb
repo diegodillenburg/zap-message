@@ -31,7 +31,7 @@ module ZapMessage
     class Message < ZapMessage::Model::Base
       include ZapMessage::Validator
 
-      ATTRS = %i[messaging_product recipient_type to type replied_message_id].freeze
+      ATTRS = %i[messaging_product recipient_type to recipient type replied_message_id].freeze
 
       # @!attribute [rw] messaging_product
       #   @return [String] the messaging product
@@ -42,8 +42,14 @@ module ZapMessage
       attr_accessor :recipient_type
 
       # @!attribute [rw] to
-      #   @return [String] the destination phone number
+      #   @return [String, nil] the destination phone number (E.164). Nil when the
+      #     recipient is addressed by BSUID instead.
       attr_accessor :to
+
+      # @!attribute [rw] recipient
+      #   @return [String, nil] the destination Business-Scoped User ID (BSUID),
+      #     sent verbatim. Nil when the recipient is addressed by phone number.
+      attr_accessor :recipient
 
       # @!attribute [rw] type
       #   @return [String] the type of the message
@@ -66,9 +72,7 @@ module ZapMessage
         super(**attrs)
         @messaging_product ||= 'whatsapp'
         @recipient_type ||= 'individual'
-        # `to` may be a phone number or a Business-Scoped User ID (BSUID).
-        # BSUIDs must be sent verbatim; only phone numbers get E.164 formatting.
-        @to = ZapMessage::Identifier.normalize(@to) if @to
+        route_recipient!
       end
 
       # Returns the attributes of the message after validation and merging with base attributes.
@@ -82,6 +86,24 @@ module ZapMessage
       end
 
       private
+
+      # The Messages API addresses a user by EITHER a phone number (`to`) or a
+      # Business-Scoped User ID (`recipient`) — never both, and `to` wins if both
+      # are present. Callers may supply the identifier via either keyword; we
+      # detect its kind and route it to the correct field, normalizing phone
+      # numbers to E.164 and passing BSUIDs through verbatim.
+      def route_recipient!
+        identifier = @recipient || @to
+        @to = nil
+        @recipient = nil
+        return if identifier.nil? || identifier.to_s.empty?
+
+        if ZapMessage::Identifier.bsuid?(identifier)
+          @recipient = identifier.to_s
+        else
+          @to = ZapMessage::Identifier.normalize(identifier)
+        end
+      end
 
       # This method should be implemented in subclasses to provide message type-specific attributes.
       #
@@ -97,10 +119,18 @@ module ZapMessage
       def base_attributes
         {
           messaging_product: messaging_product,
-          recipient_type: recipient_type,
-          to: to,
-          type: type
-        }.merge(context_attributes)
+          recipient_type: recipient_type
+        }.merge(recipient_attributes)
+          .merge(type: type)
+          .merge(context_attributes)
+      end
+
+      # Emits exactly one recipient field: `recipient` for a BSUID target,
+      # otherwise `to` for a phone number.
+      def recipient_attributes
+        return { recipient: recipient } if recipient
+
+        { to: to }
       end
 
       # Returns the context attributes for the message if `replied_message_id` is provided.
@@ -119,9 +149,19 @@ module ZapMessage
         [
           { name: :messaging_product, type: String, validations: [:required] },
           { name: :recipient_type, type: String, validations: [:required] },
-          { name: :to, type: String, validations: [:required] },
+          { name: :to, type: String, validations: [:recipient_required] },
           { name: :type, type: String, validations: [:required] },
         ]
+      end
+
+      # Requires at least one recipient identifier: a phone number (`to`) or a
+      # BSUID (`recipient`). Exclusivity is already guaranteed by route_recipient!.
+      def recipient_required(_validation, _attribute, _type)
+        return unless to.nil? && recipient.nil?
+
+        raise ZapMessage::Error::InvalidAttributes::IdentifierRequired.new(
+          'A recipient is required: supply a phone number (`to`) or a BSUID (`recipient`)'
+        )
       end
     end
   end

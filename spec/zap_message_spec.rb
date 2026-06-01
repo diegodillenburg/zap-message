@@ -3,6 +3,6 @@ require_relative '../lib/zap_message'
 
 RSpec.describe ZapMessage do
   it 'has a version number' do
-    expect(ZapMessage::Version.version).to eq('0.3.0')
+    expect(ZapMessage::Version.version).to eq('0.4.0')
   end
 end

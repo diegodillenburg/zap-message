@@ -8,8 +8,8 @@ RSpec.describe ZapMessage::Configuration do
     context 'with default values' do
       subject(:config) { described_class.new }
 
-      it 'sets api_version to v20.0' do
-        expect(config.api_version).to eq('v20.0')
+      it 'sets api_version to v22.0' do
+        expect(config.api_version).to eq('v22.0')
       end
 
       it 'sets timeout to 30' do

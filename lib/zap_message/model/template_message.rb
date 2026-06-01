@@ -27,9 +27,9 @@ module ZapMessage
 
       def guard_authentication_recipient!
         return unless authentication
-        return unless ZapMessage::Identifier.bsuid?(to)
+        return if recipient.nil?
 
-        raise ZapMessage::Error::AuthenticationTemplateRequiresPhone, to
+        raise ZapMessage::Error::AuthenticationTemplateRequiresPhone, recipient
       end
 
       def message_type_attributes

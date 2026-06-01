@@ -12,8 +12,9 @@ module ZapMessage
   # Managed (multi-portfolio) businesses may instead receive a "parent" BSUID,
   # which inserts "ENT." after the country code, e.g. "US.ENT.11815799212886844830".
   #
-  # BSUIDs must be sent to the API verbatim; unlike phone numbers they must NOT
-  # be stripped or reformatted.
+  # BSUIDs must be sent to the API verbatim (unlike phone numbers they must NOT
+  # be stripped or reformatted) and in the dedicated `recipient` field rather
+  # than `to` — see ZapMessage::Model::Message#route_recipient!.
   module Identifier
     BSUID_REGEX        = /\A[A-Z]{2}\.(?:ENT\.)?[A-Za-z0-9]{1,128}\z/
     PARENT_BSUID_REGEX = /\A[A-Z]{2}\.ENT\.[A-Za-z0-9]{1,128}\z/
