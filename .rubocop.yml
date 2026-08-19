@@ -18,8 +18,3 @@ Style/HashSyntax:
 Naming/VariableNumber:
   Enabled: True
   EnforcedStyle: snake_case
-Metrics/BlockLength:
-  # RSpec `describe`/`context`/`let` blocks are structurally long by design;
-  # the cop only produces false positives against them.
-  Exclude:
-    - 'spec/**/*'
