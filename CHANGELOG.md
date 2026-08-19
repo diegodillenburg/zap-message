@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-19
+
+### Added — Webhook payload signature verification
+
+Meta signs every WhatsApp webhook POST with an `X-Hub-Signature-256` header
+holding an HMAC-SHA256 of the raw request body keyed by the app's App Secret.
+The gem previously only handled the GET verification handshake, leaving webhook
+endpoints unauthenticated. This release adds the missing primitive.
+See https://developers.facebook.com/docs/graph-api/webhooks/getting-started#validate-payloads
+
+- **`WebhookHandler.valid_signature?(payload_body, signature_header, app_secret: nil)`**
+  — returns a boolean. `payload_body` must be the **raw** request body string
+  (`request.raw_post` in Rails); a parsed-and-re-serialized payload will never
+  verify, because JSON round-tripping changes the bytes the HMAC covers. The
+  header is accepted with or without the `sha256=` prefix. Digests are compared
+  with `OpenSSL.fixed_length_secure_compare` (with a dependency-free
+  constant-time fallback for older openssl versions), after a length check.
+- **Fails closed.** Never raises: a blank secret, a blank/nil header, or a
+  malformed header all return `false`.
+- **Configuration option:** `app_secret` — the Meta App Secret
+  (ENV: `WHATSAPP_APP_SECRET`). It is intentionally *not* part of the legacy
+  ENV deprecation check, so setting it does not start emitting deprecation
+  warnings.
+
+### Notes
+
+- Fully backward compatible and opt-in. `WebhookHandler.process` and
+  `WebhookHandler.verify` are unchanged and never consult a signature or an app
+  secret; an app that upgrades without configuring `app_secret` behaves exactly
+  as before.
+- No new runtime dependencies — verification uses the `openssl` stdlib only, and
+  the gem still does not require Rails or ActiveSupport.
+- Test coverage: 164 examples, 0 failures.
+
 ## [0.4.0] - 2026-06-01
 
 ### Added — Business-Scoped User ID (BSUID) support
