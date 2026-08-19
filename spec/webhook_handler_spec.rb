@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'json'
+require 'openssl'
+
 require_relative 'spec_helper'
 require_relative '../lib/zap_message'
 
@@ -290,6 +293,212 @@ RSpec.describe ZapMessage::WebhookHandler do
 
         expect(described_class.process(payload)).to eq([])
       end
+    end
+  end
+
+  describe '.valid_signature?' do
+    let(:app_secret) { 'super_secret_app_secret' }
+    let(:payload_body) { '{"object":"whatsapp_business_account","entry":[]}' }
+    let(:digest) { OpenSSL::HMAC.hexdigest('SHA256', app_secret, payload_body) }
+
+    before do
+      allow(ZapMessage.configuration).to receive(:app_secret).and_return(app_secret)
+    end
+
+    context 'with a valid signature' do
+      it 'returns true for a sha256-prefixed header' do
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest}")).to be true
+      end
+
+      it 'returns true for a bare hex header' do
+        expect(described_class.valid_signature?(payload_body, digest)).to be true
+      end
+
+      it 'returns true for an uppercase hex header' do
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest.upcase}")).to be true
+      end
+
+      it 'returns true when the header carries surrounding whitespace' do
+        expect(described_class.valid_signature?(payload_body, "  sha256=#{digest}  ")).to be true
+      end
+    end
+
+    context 'with an invalid signature' do
+      it 'returns false when the digest was keyed with a different secret' do
+        wrong = OpenSSL::HMAC.hexdigest('SHA256', 'other_secret', payload_body)
+
+        expect(described_class.valid_signature?(payload_body, "sha256=#{wrong}")).to be false
+      end
+
+      it 'returns false when the body was tampered with' do
+        tampered = payload_body.sub('whatsapp_business_account', 'tampered_account')
+
+        expect(described_class.valid_signature?(tampered, "sha256=#{digest}")).to be false
+      end
+
+      it 'returns false when a re-serialized payload is passed instead of the raw body' do
+        reserialized = JSON.generate(JSON.parse(payload_body).merge('extra' => true))
+
+        expect(described_class.valid_signature?(reserialized, "sha256=#{digest}")).to be false
+      end
+    end
+
+    context 'with a blank or malformed header' do
+      it 'returns false for nil' do
+        expect(described_class.valid_signature?(payload_body, nil)).to be false
+      end
+
+      it 'returns false for an empty string' do
+        expect(described_class.valid_signature?(payload_body, '')).to be false
+      end
+
+      it 'returns false for a whitespace-only string' do
+        expect(described_class.valid_signature?(payload_body, '   ')).to be false
+      end
+
+      it 'returns false for a bare prefix with no digest' do
+        expect(described_class.valid_signature?(payload_body, 'sha256=')).to be false
+      end
+
+      it 'returns false for a non-hex digest' do
+        expect(described_class.valid_signature?(payload_body, "sha256=#{'z' * 64}")).to be false
+      end
+
+      it 'returns false for a truncated digest' do
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest[0..30]}")).to be false
+      end
+
+      it 'returns false for a digest carrying an unexpected algorithm prefix' do
+        expect(described_class.valid_signature?(payload_body, "sha1=#{digest}")).to be false
+      end
+
+      it 'does not raise for any of them' do
+        expect do
+          described_class.valid_signature?(payload_body, nil)
+          described_class.valid_signature?(payload_body, 'garbage')
+        end.not_to raise_error
+      end
+    end
+
+    context 'with a blank secret' do
+      it 'returns false when the configuration has no app_secret' do
+        allow(ZapMessage.configuration).to receive(:app_secret).and_return(nil)
+
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest}")).to be false
+      end
+
+      it 'returns false when the configured app_secret is empty' do
+        allow(ZapMessage.configuration).to receive(:app_secret).and_return('')
+
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest}")).to be false
+      end
+
+      it 'returns false when an explicit blank app_secret is passed and none is configured' do
+        allow(ZapMessage.configuration).to receive(:app_secret).and_return(nil)
+
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest}", app_secret: '')).to be false
+      end
+    end
+
+    context 'when OpenSSL.fixed_length_secure_compare is unavailable' do
+      before do
+        allow(OpenSSL).to receive(:respond_to?).and_call_original
+        allow(OpenSSL).to receive(:respond_to?).with(:fixed_length_secure_compare).and_return(false)
+      end
+
+      it 'falls back to the dependency-free constant-time comparison' do
+        expect(described_class.valid_signature?(payload_body, "sha256=#{digest}")).to be true
+      end
+
+      it 'still rejects a digest keyed with the wrong secret' do
+        wrong = OpenSSL::HMAC.hexdigest('SHA256', 'other_secret', payload_body)
+
+        expect(described_class.valid_signature?(payload_body, "sha256=#{wrong}")).to be false
+      end
+    end
+
+    context 'with a nil payload body' do
+      it 'returns false' do
+        expect(described_class.valid_signature?(nil, "sha256=#{digest}")).to be false
+      end
+    end
+
+    context 'with an explicit app_secret argument' do
+      let(:explicit_secret) { 'explicit_secret' }
+      let(:explicit_digest) { OpenSSL::HMAC.hexdigest('SHA256', explicit_secret, payload_body) }
+
+      it 'overrides the configured secret' do
+        result = described_class.valid_signature?(
+          payload_body,
+          "sha256=#{explicit_digest}",
+          app_secret: explicit_secret
+        )
+
+        expect(result).to be true
+      end
+
+      it 'rejects a digest keyed with the configured secret' do
+        result = described_class.valid_signature?(
+          payload_body,
+          "sha256=#{digest}",
+          app_secret: explicit_secret
+        )
+
+        expect(result).to be false
+      end
+    end
+  end
+
+  describe 'backwards compatibility' do
+    let(:payload) do
+      {
+        'object' => 'whatsapp_business_account',
+        'entry' => [{
+          'id' => 'business_account_id',
+          'changes' => [{
+            'field' => 'messages',
+            'value' => {
+              'metadata' => { 'phone_number_id' => 'phone_id' },
+              'messages' => [{ 'id' => 'msg1', 'from' => '123', 'type' => 'text', 'text' => { 'body' => 'Hi' } }]
+            }
+          }]
+        }]
+      }
+    end
+
+    it 'does not make .process require or consult a signature' do
+      expect(described_class.process(payload).size).to eq(1)
+    end
+
+    it 'does not make .process require an app_secret' do
+      allow(ZapMessage.configuration).to receive(:app_secret).and_return(nil)
+
+      expect(described_class.process(payload).size).to eq(1)
+    end
+
+    it 'keeps .verify working without an app_secret' do
+      allow(ZapMessage.configuration).to receive(:webhook_verify_token).and_return('token')
+      allow(ZapMessage.configuration).to receive(:app_secret).and_return(nil)
+
+      params = {
+        'hub.mode' => 'subscribe',
+        'hub.verify_token' => 'token',
+        'hub.challenge' => 'challenge'
+      }
+
+      expect(described_class.verify(params)).to eq('challenge')
+    end
+
+    it 'still raises VerificationError from .verify on a bad token' do
+      allow(ZapMessage.configuration).to receive(:webhook_verify_token).and_return('token')
+
+      params = {
+        'hub.mode' => 'subscribe',
+        'hub.verify_token' => 'nope',
+        'hub.challenge' => 'challenge'
+      }
+
+      expect { described_class.verify(params) }.to raise_error(ZapMessage::WebhookHandler::VerificationError)
     end
   end
 end

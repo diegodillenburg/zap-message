@@ -8,6 +8,7 @@ RSpec.configure do |config|
     ENV.delete('WA_BUSINESS_PHONE_NUMBER')
     ENV.delete('WHATSAPP_BUSINESS_ACCOUNT_ID')
     ENV.delete('WHATSAPP_WEBHOOK_VERIFY_TOKEN')
+    ENV.delete('WHATSAPP_APP_SECRET')
   end
 
   config.after do

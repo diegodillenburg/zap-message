@@ -43,6 +43,24 @@ RSpec.describe ZapMessage::Configuration do
       it 'sets log_responses to false' do
         expect(config.log_responses).to be false
       end
+
+      it 'leaves app_secret nil so signature verification stays opt-in' do
+        expect(config.app_secret).to be_nil
+      end
+    end
+
+    context 'when WHATSAPP_APP_SECRET is set' do
+      before { ENV['WHATSAPP_APP_SECRET'] = 'env_app_secret' }
+
+      after { ENV.delete('WHATSAPP_APP_SECRET') }
+
+      it 'loads app_secret from ENV' do
+        expect(described_class.new.app_secret).to eq('env_app_secret')
+      end
+
+      it 'does not trigger the legacy credential deprecation warning' do
+        expect { described_class.new }.not_to output(/DEPRECATION/).to_stderr
+      end
     end
 
     context 'when ENV variables are set' do
@@ -88,6 +106,14 @@ RSpec.describe ZapMessage do
       expect(ZapMessage.configuration.access_token).to eq('custom_token')
       expect(ZapMessage.configuration.api_version).to eq('v21.0')
     end
+
+    it 'accepts an app_secret' do
+      ZapMessage.configure do |config|
+        config.app_secret = 'configured_app_secret'
+      end
+
+      expect(ZapMessage.configuration.app_secret).to eq('configured_app_secret')
+    end
   end
 
   describe '.configuration' do
@@ -96,10 +122,10 @@ RSpec.describe ZapMessage do
     end
 
     it 'returns same instance on multiple calls' do
-      config1 = ZapMessage.configuration
-      config2 = ZapMessage.configuration
+      first_config = ZapMessage.configuration
+      second_config = ZapMessage.configuration
 
-      expect(config1).to eq(config2)
+      expect(first_config).to eq(second_config)
     end
   end
 
