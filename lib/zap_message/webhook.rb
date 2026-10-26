@@ -4,6 +4,7 @@ require 'zap_message/webhook/base_event'
 require 'zap_message/webhook/message_received'
 require 'zap_message/webhook/message_status'
 require 'zap_message/webhook/system_event'
+require 'zap_message/webhook/template_category_update'
 
 module ZapMessage
   module Webhook

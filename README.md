@@ -73,6 +73,96 @@ ZapMessage::WebhookHandler.valid_signature?(
 )
 ```
 
+## Sending Marketing Messages
+
+Meta is moving marketing templates off the Cloud API `/messages` endpoint and
+onto the [Marketing Messages API for WhatsApp](https://developers.facebook.com/documentation/business-messaging/whatsapp/marketing-messages/overview/)
+(`/marketing_messages`):
+
+- **2027-04-13**: WABAs created on or after this date can't send marketing
+  templates through `/messages`.
+- **2027-10-13**: marketing templates sent to `/messages` fail for every WABA.
+
+Service, utility and authentication messages stay on `/messages`.
+
+### Before you switch
+
+No new credentials are needed: `/marketing_messages` takes the same access
+token (with `whatsapp_business_messaging`), phone number ID and payload.
+The WABA has to accept the MM API Terms of Service (App Dashboard > WhatsApp >
+Quickstart) and finish onboarding. Until then, Meta's default
+`product_policy` (`CLOUD_API_FALLBACK`) delivers through Cloud API.
+
+### Sending a marketing template directly
+
+```ruby
+message = ZapMessage::Model::TemplateMessage.new(
+  to: '5511999999999',
+  name: 'black_friday',
+  language_code: 'pt_BR',
+  product_policy: 'STRICT',        # optional: never fall back to Cloud API
+  message_activity_sharing: false  # optional: overrides the account default
+)
+
+ZapMessage::Api::MarketingMessages.new.send_message(message)
+```
+
+`product_policy` and `message_activity_sharing` are only sent to
+`/marketing_messages`; `Api::Messages` ignores them. Sending a non-template
+message through `Api::MarketingMessages` raises
+`ZapMessage::Error::MarketingMessagesRequireTemplate`.
+
+### Routing by template category
+
+Meta can recategorize an approved template (e.g. UTILITY to MARKETING), so the
+endpoint must follow the template's *latest* category. `TemplateRouter` does
+that for you:
+
+```ruby
+ROUTER = ZapMessage::TemplateRouter.new
+
+ROUTER.send_message(template_message) # MARKETING -> /marketing_messages, else /messages
+ROUTER.send_message(text_message)     # non-templates always -> /messages
+```
+
+- Categories are looked up with `Api::Templates#category` on first use and
+  cached. The default store is in memory and per process; pass
+  `category_store:` any object with `#fetch(name, language)` and
+  `#store(name, language, category)` to share a persistent one.
+- Subscribe your app to the `template_category_update` webhook field and feed
+  events to the router. Only completed changes are applied:
+
+```ruby
+ZapMessage::WebhookHandler.process(payload).each do |event|
+  ROUTER.apply(event) if event.type == :template_category_update
+end
+```
+
+- In-flight changes are retried once, only after a confirmed rejection. If
+  `/messages` raises 131063 (`Error::MarketingTemplatesDisabledOnCloudApi`),
+  the router resends to `/marketing_messages`. If a `/marketing_messages` send
+  fails and the template is no longer MARKETING, it resends to `/messages`.
+
+Once onboarding is complete, Meta recommends turning on the WABA setting
+`disable_marketing_messages_on_cloud_api`, so stray marketing templates on
+`/messages` fail loudly (131063) and the router can redirect them.
+
+### Errors
+
+| Code   | Raised as                                        | Meaning |
+|--------|--------------------------------------------------|---------|
+| 131063 | `Error::MarketingTemplatesDisabledOnCloudApi`    | Marketing template sent to `/messages` while disabled on Cloud API |
+| 131062 | `Error::BsuidRecipientNotSupported`              | BSUID recipient for a message that needs a phone number (e.g. max-price templates) |
+
+Both inherit from `Error::ApiError`, which exposes `#code` and `#details`.
+
+### Telling which API delivered a message
+
+```ruby
+event.marketing_lite?    # true when sent through the Marketing Messages API
+event.pricing_category   # "marketing_lite", or "marketing" after a Cloud API fallback
+```
+
 ## Handling Interactive Replies
 
 Process button clicks and list selections from WhatsApp interactive messages:

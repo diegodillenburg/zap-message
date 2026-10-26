@@ -72,15 +72,24 @@ module ZapMessage
 
         payload['entry']&.each do |entry|
           entry['changes']&.each do |change|
-            next unless change['field'] == 'messages'
-
-            value = change['value']
-            events.concat(parse_messages(value))
-            events.concat(parse_statuses(value))
+            events.concat(parse_change(change, entry))
           end
         end
 
         events
+      end
+
+      def parse_change(change, entry)
+        value = change['value']
+
+        case change['field']
+        when 'messages'
+          parse_messages(value) + parse_statuses(value)
+        when 'template_category_update'
+          [Webhook::TemplateCategoryUpdate.new(value: value, business_account_id: entry['id'])]
+        else
+          []
+        end
       end
 
       def parse_messages(value)

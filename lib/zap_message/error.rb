@@ -36,6 +36,46 @@ module ZapMessage
       end
     end
 
+    # Raised when a non-template message is sent through the Marketing
+    # Messages API. `/marketing_messages` accepts marketing template messages
+    # only, so we fail fast before the request.
+    class MarketingMessagesRequireTemplate < Error
+      attr_reader :type
+
+      def initialize(type)
+        @type = type
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "The Marketing Messages API only sends template messages, got type '#{type}'. " \
+          'Send other message types through ZapMessage::Api::Messages.'
+      end
+    end
+
+    # An error Meta returned for a send, identified by its Graph API error
+    # code. `details` is error_data.details, Meta's explanation, when present.
+    class ApiError < Error
+      attr_reader :code, :details
+
+      def initialize(message, code:, details: nil)
+        @code = code
+        @details = details
+        super(message)
+      end
+    end
+
+    # 131063: a Marketing category template was sent to /messages while the
+    # WABA has disable_marketing_messages_on_cloud_api set. Send it through
+    # Api::MarketingMessages instead.
+    class MarketingTemplatesDisabledOnCloudApi < ApiError; end
+
+    # 131062: the recipient is a BSUID and the message doesn't support one,
+    # e.g. a max-price (bid_spec / optimization_spec) marketing template.
+    class BsuidRecipientNotSupported < ApiError; end
+
     class RateLimitExceeded < Error
       attr_reader :reset_at, :messages_sent
 

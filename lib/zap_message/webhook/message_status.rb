@@ -3,6 +3,8 @@
 module ZapMessage
   module Webhook
     class MessageStatus < BaseEvent
+      MARKETING_LITE = 'marketing_lite'
+
       attr_reader :status, :contacts
 
       def initialize(status:, contacts: nil, metadata: nil)
@@ -74,6 +76,20 @@ module ZapMessage
 
       def pricing
         @status['pricing']
+      end
+
+      # pricing.category, e.g. "marketing", "marketing_lite", "utility".
+      # Nil on statuses without pricing information.
+      def pricing_category
+        pricing&.dig('category')
+      end
+
+      # True when the message went out through the Marketing Messages API:
+      # Meta reports pricing.category / conversation.origin.type as
+      # "marketing_lite". A marketing template that fell back to Cloud API
+      # reports "marketing" instead. Nil-safe on statuses without pricing.
+      def marketing_lite?
+        [pricing_category, @status.dig('conversation', 'origin', 'type')].include?(MARKETING_LITE)
       end
     end
   end
