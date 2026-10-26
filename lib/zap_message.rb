@@ -13,6 +13,7 @@ require 'zap_message/webhook_handler'
 require 'zap_message/webhook'
 require 'zap_message/api'
 require 'zap_message/model'
+require 'zap_message/template_router'
 
 module ZapMessage
   class << self
