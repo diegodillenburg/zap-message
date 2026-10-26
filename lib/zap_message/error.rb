@@ -36,6 +36,25 @@ module ZapMessage
       end
     end
 
+    # Raised when a non-template message is sent through the Marketing
+    # Messages API. `/marketing_messages` accepts marketing template messages
+    # only, so we fail fast before the request.
+    class MarketingMessagesRequireTemplate < Error
+      attr_reader :type
+
+      def initialize(type)
+        @type = type
+        super(build_message)
+      end
+
+      private
+
+      def build_message
+        "The Marketing Messages API only sends template messages, got type '#{type}'. " \
+          'Send other message types through ZapMessage::Api::Messages.'
+      end
+    end
+
     class RateLimitExceeded < Error
       attr_reader :reset_at, :messages_sent
 

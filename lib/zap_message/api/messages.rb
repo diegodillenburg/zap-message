@@ -32,7 +32,7 @@ module ZapMessage
       end
 
       def path
-        PATH
+        self.class::PATH
       end
     end
   end

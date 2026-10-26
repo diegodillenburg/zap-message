@@ -1,5 +1,6 @@
 require 'zap_message/api/medias'
 require 'zap_message/api/messages'
+require 'zap_message/api/marketing_messages'
 require 'zap_message/api/templates'
 
 module ZapMessage
