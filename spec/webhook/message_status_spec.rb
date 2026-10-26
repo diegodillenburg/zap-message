@@ -68,4 +68,36 @@ RSpec.describe ZapMessage::Webhook::MessageStatus do
       expect(event.failed?).to be true
     end
   end
+
+  describe 'pricing category' do
+    def event(status)
+      described_class.new(status: { 'id' => 'wamid.jkl', 'status' => 'delivered' }.merge(status))
+    end
+
+    it 'flags messages sent through the Marketing Messages API' do
+      sent = event(
+        'conversation' => { 'id' => 'c1', 'origin' => { 'type' => 'marketing_lite' } },
+        'pricing' => { 'billable' => true, 'pricing_model' => 'PMP', 'category' => 'marketing_lite' }
+      )
+
+      expect(sent.pricing_category).to eq('marketing_lite')
+      expect(sent).to be_marketing_lite
+    end
+
+    it 'flags marketing_lite from the conversation origin alone' do
+      expect(event('conversation' => { 'origin' => { 'type' => 'marketing_lite' } })).to be_marketing_lite
+    end
+
+    it 'does not flag marketing messages that fell back to Cloud API' do
+      sent = event('pricing' => { 'category' => 'marketing' })
+
+      expect(sent.pricing_category).to eq('marketing')
+      expect(sent).not_to be_marketing_lite
+    end
+
+    it 'handles statuses without pricing' do
+      expect(event({}).pricing_category).to be_nil
+      expect(event({})).not_to be_marketing_lite
+    end
+  end
 end
