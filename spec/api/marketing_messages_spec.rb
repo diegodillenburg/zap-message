@@ -55,4 +55,26 @@ RSpec.describe ZapMessage::Api::MarketingMessages do
 
     expect(http_requests.last.path).to eq('https://graph.facebook.com/v22.0/123456/messages')
   end
+
+  describe 'marketing-only send options' do
+    let(:template) do
+      ZapMessage::Model::TemplateMessage.new(
+        to: '5511999999999', name: 'promo', language_code: 'pt_BR',
+        product_policy: 'STRICT', message_activity_sharing: false
+      )
+    end
+
+    it 'sends product_policy and message_activity_sharing to /marketing_messages' do
+      described_class.new.send_message(template)
+
+      expect(request_body).to include('product_policy' => 'STRICT', 'message_activity_sharing' => false)
+    end
+
+    it 'never sends them to /messages' do
+      ZapMessage::Api::Messages.new.send_message(template)
+
+      expect(request_body).not_to have_key('product_policy')
+      expect(request_body).not_to have_key('message_activity_sharing')
+    end
+  end
 end

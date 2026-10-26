@@ -10,13 +10,17 @@ module ZapMessage
       def send_message(message)
         check_rate_limit!
 
-        post(path, message.attributes) do |type, response|
+        post(path, payload(message)) do |type, response|
           ZapMessage::RateLimiter.increment! if type == :success
           parse(type, response)
         end
       end
 
       private
+
+      def payload(message)
+        message.attributes
+      end
 
       def check_rate_limit!
         return if ZapMessage::RateLimiter.can_send?

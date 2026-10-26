@@ -21,6 +21,12 @@ module ZapMessage
 
       private
 
+      def payload(message)
+        return message.marketing_attributes if message.respond_to?(:marketing_attributes)
+
+        super
+      end
+
       def guard_template!(message)
         return if message.type == TEMPLATE_TYPE
 
