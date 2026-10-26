@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-26
+
+### Added — Marketing Messages API for WhatsApp
+
+Meta sunsets marketing templates on the Cloud API `/messages` endpoint on
+2027-10-13 (2027-04-13 for WABAs created on or after that date). Marketing
+templates must be sent through the Marketing Messages API for WhatsApp
+instead. See https://developers.facebook.com/documentation/business-messaging/whatsapp/marketing-messages/overview/
+
+- **`Api::MarketingMessages`** — sends to `/{phone_number_id}/marketing_messages`
+  with the same token, phone number ID and payload as `Api::Messages`. Rejects
+  non-template messages with `Error::MarketingMessagesRequireTemplate` before
+  any request.
+- **`TemplateMessage#product_policy` / `#message_activity_sharing`** — the
+  MM API-only send options (`CLOUD_API_FALLBACK` / `STRICT`; true / false),
+  emitted only by `Api::MarketingMessages` through the new
+  `TemplateMessage#marketing_attributes`.
+- **`Api::Templates#category(name, language: nil)`** — a template's latest
+  category, matched exactly on name and language.
+- **`TemplateRouter`** — routes MARKETING templates to `/marketing_messages`
+  and everything else to `/messages`, caching categories in a pluggable
+  store, applying completed `template_category_update` webhooks, and retrying
+  once through the other endpoint after a rejection caused by a category change.
+- **`Webhook::TemplateCategoryUpdate`** — `WebhookHandler.process` now parses
+  `template_category_update` changes (impending and completed).
+- **`Webhook::MessageStatus#pricing_category` / `#marketing_lite?`** — tell
+  whether a message went through the MM API (`marketing_lite`) or fell back to
+  Cloud API (`marketing`).
+- **`Error::ApiError`** with `#code` / `#details`, and its subclasses
+  `Error::MarketingTemplatesDisabledOnCloudApi` (131063) and
+  `Error::BsuidRecipientNotSupported` (131062).
+
+### Changed
+
+- Graph errors 131062 and 131063 now **raise** the errors above instead of
+  returning `[:failure, body]`. Other codes behave as before.
+- `WebhookHandler.process` returns `TemplateCategoryUpdate` events for the
+  `template_category_update` field; it used to ignore every field other than
+  `messages`. Apps that don't subscribe to that field see no difference.
+
+### Notes
+
+- No new credentials or configuration. Existing `Api::Messages` sends are
+  unchanged; the MM API, the router and the new webhook event are opt-in.
+- Test coverage: 210 examples, 0 failures.
+
 ## [0.5.0] - 2026-08-19
 
 ### Added — Webhook payload signature verification
