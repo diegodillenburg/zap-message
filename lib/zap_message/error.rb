@@ -55,6 +55,27 @@ module ZapMessage
       end
     end
 
+    # An error Meta returned for a send, identified by its Graph API error
+    # code. `details` is error_data.details, Meta's explanation, when present.
+    class ApiError < Error
+      attr_reader :code, :details
+
+      def initialize(message, code:, details: nil)
+        @code = code
+        @details = details
+        super(message)
+      end
+    end
+
+    # 131063: a Marketing category template was sent to /messages while the
+    # WABA has disable_marketing_messages_on_cloud_api set. Send it through
+    # Api::MarketingMessages instead.
+    class MarketingTemplatesDisabledOnCloudApi < ApiError; end
+
+    # 131062: the recipient is a BSUID and the message doesn't support one,
+    # e.g. a max-price (bid_spec / optimization_spec) marketing template.
+    class BsuidRecipientNotSupported < ApiError; end
+
     class RateLimitExceeded < Error
       attr_reader :reset_at, :messages_sent
 

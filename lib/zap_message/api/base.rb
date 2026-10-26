@@ -2,11 +2,17 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'zap_message/error'
 
 module ZapMessage
   module Api
     class Base
       class RetryableError < StandardError; end
+
+      CODE_ERRORS = {
+        131_062 => Error::BsuidRecipientNotSupported,
+        131_063 => Error::MarketingTemplatesDisabledOnCloudApi
+      }.freeze
 
       def initialize
         @http = Net::HTTP.new(uri.host, uri.port)
@@ -150,12 +156,21 @@ module ZapMessage
         error_message = error_data['message'] || 'Unknown error'
         error_code = error_data['code']
 
+        raise_coded_error(error_message, error_code, error_data)
+
         case status_code
         when 401, 403
           raise Error::AuthenticationFailed, error_message
         when 400
           handle_bad_request_error(error_message, error_code)
         end
+      end
+
+      def raise_coded_error(message, code, error_data)
+        error_class = CODE_ERRORS[code]
+        return unless error_class
+
+        raise error_class.new(message, code: code, details: error_data.dig('error_data', 'details'))
       end
 
       def handle_bad_request_error(message, code)
